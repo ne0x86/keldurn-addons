@@ -1,0 +1,8 @@
+## Interface: 11200
+## Title: Keldurn Sell Price
+## Notes: Vendor sell price in item tooltips, learned from vendors. Written for the Keldurn client.
+## Author: ne0x86
+## Version: 1.0
+## DefaultState: enabled
+## SavedVariables: KeldurnSellPriceDB
+KeldurnSellPrice.lua
