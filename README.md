@@ -16,13 +16,13 @@ The Keldurn client is a reimplementation of the 1.12 interface, and some classic
 
 ## Installation
 
-1. Download the repository: green **Code → Download ZIP** button, then unzip it.
+1. Download `Keldurn-Addons-<version>.zip` from the [latest release](../../releases/latest).
 2. Open the Keldurn addons folder: press `Win + R`, paste this and press Enter:
    ```
    %LOCALAPPDATA%\Keldurn\settings\AddOns
    ```
-3. Copy **the folders you want** from the `AddOns/` folder of the ZIP into it (KeldurnFrames, KeldurnTimers, KeldurnSellPrice, Titan, !OmniCC).
-   - If you already had one of these addons installed, **delete its old folder first** and put the new one in. Some Titan versions ship extra subfolders (TitanBG, TitanItemBonuses, TitanHonorPlus…) that are loaded as separate addons and cause errors.
+3. Extract the zip there: the addon folders (KeldurnFrames, KeldurnTimers, KeldurnSellPrice, Titan, !OmniCC) go directly inside that folder. If you do not want all of them, every addon is also available as its own zip on the same page.
+   - If you already had one of these addons installed, **delete its old folder first**. Some Titan versions ship extra subfolders (TitanBG, TitanItemBonuses, TitanHonorPlus…) that are loaded as separate addons and cause errors.
 4. Start the game and, on the character selection screen, open **AddOns** and check that they are enabled.
 
 ## Commands
