@@ -1,0 +1,66 @@
+name: Release
+
+# Pushing a tag such as v1.0.0 builds the zips and publishes a GitHub Release.
+# It can also be started by hand (Actions tab > Release > Run workflow): that
+# only builds the zips and keeps them as a downloadable artifact, it does not
+# publish anything.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Work out the version
+        id: version
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            echo "value=$GITHUB_REF_NAME" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=dev-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build the zips
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: python3 scripts/package.py "$VERSION" dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: keldurn-addons-${{ steps.version.outputs.value }}
+          path: dist/*.zip
+
+      - name: Publish the release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          cat > notes.md <<'EOF'
+          ## Install
+
+          1. Download **Keldurn-Addons-@TAG@.zip** below.
+          2. Press `Win + R`, paste `%LOCALAPPDATA%\Keldurn\settings\AddOns` and press Enter.
+          3. Extract the zip there: the addon folders go directly inside that folder.
+          4. If you already had any of these addons, **delete its old folder first**.
+
+          Each addon is also available as its own zip, with the same layout.
+
+          ## Changes
+          EOF
+          sed -i "s/@TAG@/$TAG/" notes.md
+          previous=$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || true)
+          if [ -n "$previous" ]; then range="$previous..$TAG"; else range="$TAG"; fi
+          git log --format='- %s' "$range" >> notes.md
+          flag=""
+          if [[ "$TAG" == *-* ]]; then flag="--prerelease"; fi
+          gh release create "$TAG" dist/*.zip --title "$TAG" --notes-file notes.md --verify-tag $flag
