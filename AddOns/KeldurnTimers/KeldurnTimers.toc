@@ -1,0 +1,8 @@
+## Interface: 11200
+## Title: Keldurn Timers
+## Notes: Timer bars for spell casts, melee swings and ranged/wand shots. Written for the Keldurn client.
+## Author: ne0x86
+## Version: 1.0
+## DefaultState: enabled
+## SavedVariables: KeldurnTimersDB
+KeldurnTimers.lua
