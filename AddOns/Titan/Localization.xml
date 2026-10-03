@@ -4,6 +4,6 @@
 	<Script file="Localization.FR.lua"/> 
 	<Script file="Localization.lua"/> 
 	<Script>
-		Localize();
+		TitanLocalize();
 	</Script>
 </Ui>

@@ -132,7 +132,8 @@ function TitanPanelItemBonusesButton_OnEvent()
 	if (event == "PLAYER_ENTERING_WORLD") then
 		TitanItemBonuses_active = 1;
 	end
-	if (((event == "PLAYER_ENTERING_WORLD") or (event == "UNIT_INVENTORY_CHANGED")) and TitanItemBonuses_active) then
+	-- [Keldurn fix] only recalculate when the player's own equipment changes
+	if (((event == "PLAYER_ENTERING_WORLD") or (event == "UNIT_INVENTORY_CHANGED" and arg1 == "player")) and TitanItemBonuses_active) then
 		TitanPanelItemBonuses_CalcValues();
 		TitanPanelButton_UpdateButton(TITAN_ITEMBONUSES_ID);
 	end
@@ -144,8 +145,10 @@ function TitanPanelRightClickMenu_PrepareItemBonusesMenu()
 	local i,cat,disp,val;
 
 	if ( UIDROPDOWNMENU_MENU_LEVEL == 2 ) then
+		-- [Keldurn fix] use the value of the open menu (as Titan does), not "this"
+		local menuValue = UIDROPDOWNMENU_MENU_VALUE or this.value;
 		for i,e in TITAN_ITEMBONUSES_EFFECTS do
-			if(e.cat == this.value) then
+			if(e.cat == menuValue) then
 				info = {};
 				info.text = '[' .. TitanPanelItemBonusesButton_FormatShortText(e.short) .. '] ' .. e.name;
 				if(TitanItemBonuses_bonuses[e.effect]) then
@@ -221,3 +224,19 @@ function TitanPanelItemBonuses_CalcValues()
 	TitanItemBonuses_bonuses = BonusScanner_bonuses;
 end
 
+-- [Keldurn fix] if any function of this plugin fails in Keldurn, report it once
+-- in chat instead of showing the error window over and over.
+if (TitanKeldurn_Protect) then
+	TitanKeldurn_Protect({
+	"TitanPanelItemBonusesButton_OnLoad",
+	"TitanPanelItemBonusesButton_FormatShortText",
+	"TitanPanelItemBonusesButton_GetButtonText",
+	"TitanPanelItemBonusesButton_isdisp",
+	"TitanPanelItemBonusesButton_hasdisp",
+	"TitanPanelItemBonusesButton_GetTooltipText",
+	"TitanPanelItemBonusesButton_OnEvent",
+	"TitanPanelRightClickMenu_PrepareItemBonusesMenu",
+	"TitanPanelItemBonuses_SetDisplay",
+	"TitanPanelItemBonuses_CalcValues"
+	});
+end

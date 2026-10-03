@@ -57,6 +57,9 @@ Tit_R_PleaseCheckBag[5]  = 0; -- this will be used for equiped items, not very g
 
 local InitialLoad = 0; -- Found no use of this
 
+-- [Keldurn fix] only if the client has Blizzard-style popup dialogs
+local TEXT = TEXT or function(t) return t; end
+if (StaticPopupDialogs) then
 StaticPopupDialogs["REPAIR_CONFIRMATION"] = {
     text = TEXT(REPAIR_LOCALE["confirmation"]),
     button1 = TEXT(YES),
@@ -70,6 +73,7 @@ StaticPopupDialogs["REPAIR_CONFIRMATION"] = {
     hasMoneyFrame = 1,
     timeout = 0,
 };
+end
 
 
 function TitanPanelRepairButton_OnLoad()
@@ -159,7 +163,9 @@ function TitanPanelRepairButton_OnEvent()
 		end
 		if (repairCost > 0) then
 		    REPAIR_MONEY = repairCost;
-		    StaticPopup_Show("REPAIR_CONFIRMATION");
+		    if (StaticPopup_Show and StaticPopupDialogs and StaticPopupDialogs["REPAIR_CONFIRMATION"]) then
+			StaticPopup_Show("REPAIR_CONFIRMATION");
+		    end
 		end
 	    end
 	end
@@ -167,7 +173,9 @@ function TitanPanelRepairButton_OnEvent()
     end
 
     if ( event == "MERCHANT_CLOSED" ) then
-	StaticPopup_Hide("REPAIR_CONFIRMATION");
+	if (StaticPopup_Hide) then
+	    StaticPopup_Hide("REPAIR_CONFIRMATION");
+	end
 	-- When an object is repaired in a bag, the BAG_UPDATE event is not sent... :'(
 	-- so we rescan all
 	if (Tit_R_CouldRepair) then
@@ -754,5 +762,33 @@ function TitanRepair_GetRepairInvCost()
     return result;
 end
 
-
-
+-- [Keldurn fix] if any function of this plugin fails in Keldurn, report it once
+-- in chat instead of showing the error window over and over.
+if (TitanKeldurn_Protect) then
+	TitanKeldurn_Protect({
+	"TitanPanelRepairButton_OnLoad",
+	"TitanPanelRepairButton_ScanAllItems",
+	"TitanPanelRepairButton_OnEvent",
+	"tit_debug_bis",
+	"TitanPanelRepairButton_OnUpdate",
+	"TitanRepair_GetStatusPercent",
+	"TitanRepair_GetMostDamagedItem",
+	"TitanRepair_GetInventoryInformation",
+	"TitanRepair_GetEquipedInformation",
+	"TitanRepair_GetStatus",
+	"TitanRepair_GetStatusStr",
+	"TitanRepair_AutoHighlight",
+	"TitanRepair_GetCostStr",
+	"TitanPanelRepairButton_GetButtonText",
+	"TitanPanelRepairButton_GetTooltipText",
+	"TitanPanelRightClickMenu_PrepareRepairMenu",
+	"TitanRepair_ShowPercentage",
+	"TitanRepair_ShowItemName",
+	"TitanRepair_ShowUndamaged",
+	"TitanRepair_ShowPop",
+	"TitanRepair_RepairInventory",
+	"TitanRepair_ShowInventory",
+	"TitanRepair_RepairItems",
+	"TitanRepair_GetRepairInvCost"
+	});
+end

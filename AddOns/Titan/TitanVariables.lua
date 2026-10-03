@@ -44,6 +44,11 @@ function TitanVariables_InitDetailedSettings()
 			-- Syncronize Plugins/Panel settings
 			TitanVariables_SyncPluginSettings();
 			TitanVariables_SyncPanelSettings();
+
+			-- [Keldurn fix] show the basic plugins the first time
+			if (TitanKeldurn_AddDefaultPlugins) then
+				TitanKeldurn_AddDefaultPlugins();
+			end
 		end					
 	end	
 end

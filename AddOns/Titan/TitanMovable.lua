@@ -1,6 +1,26 @@
 TITAN_PANEL_PLACE_TOP = 1;
 TITAN_PANEL_PLACE_BOTTOM = 2;
 
+-- [Keldurn fix] The Keldurn client does not create every frame of the original
+-- Blizzard interface (e.g. TutorialFrameParent). These helpers avoid errors
+-- when a frame does not exist: if it is missing, it is simply not moved.
+local function TitanMovable_IsShown(frame)
+	return frame and frame.IsVisible and frame:IsVisible();
+end
+
+local function TitanMovable_SetPoint(frame, point, relativeTo, relativePoint, x, y)
+	if (frame and frame.SetPoint) then
+		frame:SetPoint(point, relativeTo, relativePoint, x, y);
+	end
+end
+
+local function TitanMovable_Height(frame)
+	if (frame and frame.GetHeight) then
+		return frame:GetHeight() or 0;
+	end
+	return 0;
+end
+
 TitanMovable = {};
 TitanMovableData = {
 	PlayerFrame = {frameName = "PlayerFrame", frameArchor = "TOPLEFT", xArchor = "LEFT", y = -4, position = TITAN_PANEL_PLACE_TOP},
@@ -56,7 +76,7 @@ function TitanMovableFrame_CheckFrames(position)
 			frameTop = TitanMovableFrame_GetOffset(Gypsy_PlayerFrameCapsule, "TOP");
 			top = 14 + panelYOffset;
 			TitanMovableFrame_CheckTopFrame(frameTop, top, Gypsy_PlayerFrameCapsule:GetName());
-		else
+		elseif (PlayerFrame) then
 			frameTop = TitanMovableFrame_GetOffset(PlayerFrame, "TOP");
 			top = -4 + panelYOffset;
 			TitanMovableFrame_CheckTopFrame(frameTop, top, PlayerFrame:GetName())
@@ -71,51 +91,57 @@ function TitanMovableFrame_CheckFrames(position)
 			frameTop = TitanMovableFrame_GetOffset(Gypsy_TargetFrameCapsule, "TOP");
 			top = 14 + panelYOffset;
 			TitanMovableFrame_CheckTopFrame(frameTop, top, Gypsy_TargetFrameCapsule:GetName());
-		else
+		elseif (TargetFrame) then
 			frameTop = TitanMovableFrame_GetOffset(TargetFrame, "TOP");
 			top = -4 + panelYOffset;
 			TitanMovableFrame_CheckTopFrame(frameTop, top, TargetFrame:GetName())
 		end
 
 		-- Move PartyMemberFrame
-		if (not CT_MovableParty1_Drag and not Gypsy_PartyFrameCapsule) then
+		if (not CT_MovableParty1_Drag and not Gypsy_PartyFrameCapsule and PartyMemberFrame1) then
 			frameTop = TitanMovableFrame_GetOffset(PartyMemberFrame1, "TOP");
 			top = -128 + panelYOffset;
 			TitanMovableFrame_CheckTopFrame(frameTop, top, PartyMemberFrame1:GetName())
 		end
 
 		-- Move TicketStatusFrame
+		if (TicketStatusFrame) then
 		frameTop = TitanMovableFrame_GetOffset(TicketStatusFrame, "TOP");
 		top = 0 + panelYOffset;
 		TitanMovableFrame_CheckTopFrame(frameTop, top, TicketStatusFrame:GetName())
+		end
 
 		-- Move TemporaryEnchantFrame
+		if (TemporaryEnchantFrame) then
 		frameTop = TitanMovableFrame_GetOffset(TemporaryEnchantFrame, "TOP");
-		if (TicketStatusFrame:IsVisible()) then
+		if (TitanMovable_IsShown(TicketStatusFrame)) then
 			top = 0 - TicketStatusFrame:GetHeight() + panelYOffset;
 		else
 			top = -13 + panelYOffset;
 		end
 		TitanMovableFrame_CheckTopFrame(frameTop, top, TemporaryEnchantFrame:GetName())
+		end
 	
 		-- Move MinimapCluster
-		if (not CleanMinimap) then
+		if (not CleanMinimap and MinimapCluster) then
 		frameTop = TitanMovableFrame_GetOffset(MinimapCluster, "TOP");
 		top = 0 + panelYOffset; 		
 		TitanMovableFrame_CheckTopFrame(frameTop, top, MinimapCluster:GetName())
 		end
 		
 		-- Move WorldStateAlwaysUpFrame
+		if (WorldStateAlwaysUpFrame) then
 		frameTop = TitanMovableFrame_GetOffset(WorldStateAlwaysUpFrame, "TOP");
 		top = -15 + panelYOffset; 		
 		TitanMovableFrame_CheckTopFrame(frameTop, top, WorldStateAlwaysUpFrame:GetName());
+		end
 
 	elseif (position == TITAN_PANEL_PLACE_BOTTOM) then
 
 		panelYOffset = TitanMovable_GetPanelYOffset(TITAN_PANEL_PLACE_BOTTOM, TitanPanelGetVar("BothBars"));
 		
 		-- Move MainMenuBar
-		if (not Gypsy_ActionBar and not BibActionBar1) then
+		if (not Gypsy_ActionBar and not BibActionBar1 and MainMenuBar) then
 			bottom = 0 + panelYOffset; 
 			frameBottom = TitanMovableFrame_GetOffset(MainMenuBar, "BOTTOM");
 			if (frameBottom >= 0) then
@@ -124,9 +150,11 @@ function TitanMovableFrame_CheckFrames(position)
 		end
 	
 		-- Move MultiBarRight
+		if (MultiBarRight) then
 		bottom = 98 + panelYOffset; 
 		frameBottom = TitanMovableFrame_GetOffset(MultiBarRight, "BOTTOM");
 		TitanMovableFrame_CheckBottomFrame(frameBottom, bottom, MultiBarRight:GetName());
+		end
 	end	
 
 end
@@ -140,14 +168,14 @@ function TitanMovableFrame_MoveFrames(position, override)
 		frameName = frameData.frameName;
 		frameArchor = frameData.frameArchor;
 
-		if (not frame:IsUserPlaced()) then
+		if (frame and frame.IsUserPlaced and not frame:IsUserPlaced()) then
 			xArchor = frameData.xArchor;
 			y = frameData.y;
 			
 			panelYOffset = TitanMovable_GetPanelYOffset(frameData.position, TitanPanelGetVar("BothBars"), override);
 	
 			xOffset = TitanMovableFrame_GetOffset(frame, xArchor);		
-			if (frameName == "TemporaryEnchantFrame" and TicketStatusFrame:IsVisible()) then
+			if (frameName == "TemporaryEnchantFrame" and TitanMovable_IsShown(TicketStatusFrame)) then
 				yOffset = (-TicketStatusFrame:GetHeight()) + panelYOffset;
 			else
 				yOffset = y + panelYOffset;	
@@ -249,11 +277,11 @@ function Titan_TicketStatusFrame_OnEvent()
 	else
 		if ( arg1 ~= 0 ) then		
 			this:Show();
-			TemporaryEnchantFrame:SetPoint("TOPRIGHT", this:GetParent():GetName(), "TOPRIGHT", -205, 0 - this:GetHeight() + panelYOffset); -- ATTN
+			TitanMovable_SetPoint(TemporaryEnchantFrame, "TOPRIGHT", this:GetParent():GetName(), "TOPRIGHT", -205, 0 - this:GetHeight() + panelYOffset); -- ATTN
 			refreshTime = GMTICKET_CHECK_INTERVAL;
 		else
 			this:Hide();
-			TemporaryEnchantFrame:SetPoint("TOPRIGHT", "UIParent", "TOPRIGHT", -205, -13 + panelYOffset); -- ATTN
+			TitanMovable_SetPoint(TemporaryEnchantFrame, "TOPRIGHT", "UIParent", "TOPRIGHT", -205, -13 + panelYOffset); -- ATTN
 		end
 	end	
 end
@@ -261,7 +289,10 @@ end
 function Titan_FCF_UpdateDockPosition()
 	local panelYOffset = TitanMovable_GetPanelYOffset(TITAN_PANEL_PLACE_BOTTOM, TitanPanelGetVar("BothBars"));
 
-	if ( DEFAULT_CHAT_FRAME:IsUserPlaced() ) then
+	if ( not DEFAULT_CHAT_FRAME ) then
+		return;
+	end
+	if ( DEFAULT_CHAT_FRAME.IsUserPlaced and DEFAULT_CHAT_FRAME:IsUserPlaced() ) then
 		if ( SIMPLE_CHAT ~= "1" ) then
 			return;
 		end
@@ -269,16 +300,18 @@ function Titan_FCF_UpdateDockPosition()
 	
 	local chatOffset = 85 + panelYOffset;
 	if ( GetNumShapeshiftForms() > 0 or HasPetUI() or PetHasActionBar() ) then
-		if ( MultiBarBottomLeft:IsVisible() or BOTTOMBAR_OFFSET_Y ) then
+		if ( TitanMovable_IsShown(MultiBarBottomLeft) or BOTTOMBAR_OFFSET_Y ) then
 			chatOffset = chatOffset + 55;
 		else
 			chatOffset = chatOffset + 15;
 		end
-	elseif ( MultiBarBottomLeft:IsVisible() or BOTTOMBAR_OFFSET_Y ) then
+	elseif ( TitanMovable_IsShown(MultiBarBottomLeft) or BOTTOMBAR_OFFSET_Y ) then
 		chatOffset = chatOffset + 15;
 	end
-	DEFAULT_CHAT_FRAME:SetPoint("BOTTOMLEFT", "UIParent", "BOTTOMLEFT", 32, chatOffset);
-	FCF_DockUpdate();
+	TitanMovable_SetPoint(DEFAULT_CHAT_FRAME, "BOTTOMLEFT", "UIParent", "BOTTOMLEFT", 32, chatOffset);
+	if ( FCF_DockUpdate ) then
+		FCF_DockUpdate();
+	end
 end
 
 function Titan_FCF_UpdateCombatLogPosition()
@@ -287,15 +320,15 @@ function Titan_FCF_UpdateCombatLogPosition()
 	if ( SIMPLE_CHAT == "1" ) then
 		local xOffset = -32;
 		local yOffset = 75 + panelYOffset;
-		if ( MultiBarBottomRight:IsVisible() ) then
+		if ( TitanMovable_IsShown(MultiBarBottomRight) ) then
 			yOffset = yOffset + 40;
 		end
-		if ( MultiBarLeft:IsVisible() ) then
+		if ( TitanMovable_IsShown(MultiBarLeft) ) then
 			xOffset = xOffset - 88;
-		elseif ( MultiBarRight:IsVisible() ) then
+		elseif ( TitanMovable_IsShown(MultiBarRight) ) then
 			xOffset = xOffset - 43;
 		end
-		ChatFrame2:SetPoint("BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", xOffset, yOffset);
+		TitanMovable_SetPoint(ChatFrame2, "BOTTOMRIGHT", "UIParent", "BOTTOMRIGHT", xOffset, yOffset);
 	end
 end
 
@@ -303,20 +336,28 @@ function Titan_CastingBarFrame_UpdatePosition()
 	local panelYOffset = TitanMovable_GetPanelYOffset(TITAN_PANEL_PLACE_BOTTOM, TitanPanelGetVar("BothBars"));
 	
 	local castingBarPosition = 60 + panelYOffset;
-	if ( PetActionBarFrame:IsVisible() or ShapeshiftBarFrame:IsVisible() ) then
+	if ( TitanMovable_IsShown(PetActionBarFrame) or TitanMovable_IsShown(ShapeshiftBarFrame) ) then
 		castingBarPosition = castingBarPosition + 40;
 	end
-	if ( MultiBarBottomLeft:IsVisible() or MultiBarBottomRight:IsVisible() ) then
+	if ( TitanMovable_IsShown(MultiBarBottomLeft) or TitanMovable_IsShown(MultiBarBottomRight) ) then
 		castingBarPosition = castingBarPosition + 40;
 	end
-	CastingBarFlash:ClearAllPoints();
-	CastingBarFlash:SetPoint("BOTTOM", "UIParent", "BOTTOM", 0, castingBarPosition - 22);
-	CastingBarText:ClearAllPoints();
-	CastingBarText:SetPoint("BOTTOM", "UIParent", "BOTTOM", 0, castingBarPosition);
-	CastingBarFrameStatusBar:ClearAllPoints();
-	CastingBarFrameStatusBar:SetPoint("BOTTOM", "UIParent", "BOTTOM", 0, castingBarPosition);
-	CastingBarFrame:ClearAllPoints();
-	CastingBarFrame:SetPoint("BOTTOM", "UIParent", "BOTTOM", 0, castingBarPosition);
+	if ( CastingBarFlash ) then
+		CastingBarFlash:ClearAllPoints();
+		CastingBarFlash:SetPoint("BOTTOM", "UIParent", "BOTTOM", 0, castingBarPosition - 22);
+	end
+	if ( CastingBarText ) then
+		CastingBarText:ClearAllPoints();
+		CastingBarText:SetPoint("BOTTOM", "UIParent", "BOTTOM", 0, castingBarPosition);
+	end
+	if ( CastingBarFrameStatusBar ) then
+		CastingBarFrameStatusBar:ClearAllPoints();
+		CastingBarFrameStatusBar:SetPoint("BOTTOM", "UIParent", "BOTTOM", 0, castingBarPosition);
+	end
+	if ( CastingBarFrame ) then
+		CastingBarFrame:ClearAllPoints();
+		CastingBarFrame:SetPoint("BOTTOM", "UIParent", "BOTTOM", 0, castingBarPosition);
+	end
 end
 
 function Titan_UIParent_ManageRightSideFrames()
@@ -324,34 +365,36 @@ function Titan_UIParent_ManageRightSideFrames()
 	
 	local anchorX = 0;
 	local anchorY = 0 + panelYOffset;
+	local bottomBars = TitanMovable_IsShown(MultiBarBottomRight) or TitanMovable_IsShown(MultiBarBottomLeft);
 
 	-- Update group loot frame anchor
-	if ( MultiBarBottomRight:IsVisible() or MultiBarBottomLeft:IsVisible() ) then
-		GroupLootFrame1:SetPoint("BOTTOM", "UIParent", "BOTTOM", 0, 102 + panelYOffset);
+	if ( bottomBars ) then
+		TitanMovable_SetPoint(GroupLootFrame1, "BOTTOM", "UIParent", "BOTTOM", 0, 102 + panelYOffset);
 	else
-		GroupLootFrame1:SetPoint("BOTTOM", "UIParent", "BOTTOM", 0, 60 + panelYOffset);
+		TitanMovable_SetPoint(GroupLootFrame1, "BOTTOM", "UIParent", "BOTTOM", 0, 60 + panelYOffset);
 	end
 	
 	-- Update tutorial anchor
-	if ( MultiBarBottomRight:IsVisible() or MultiBarBottomLeft:IsVisible() ) then
-		TutorialFrameParent:SetPoint("BOTTOM", "UIParent", "BOTTOM", 0, 94 + panelYOffset);
-		FramerateLabel:SetPoint("BOTTOM", "WorldFrame", "BOTTOM", 0, 104 + panelYOffset);
+	-- [Keldurn fix] TutorialFrameParent / FramerateLabel may not exist in this client
+	if ( bottomBars ) then
+		TitanMovable_SetPoint(TutorialFrameParent, "BOTTOM", "UIParent", "BOTTOM", 0, 94 + panelYOffset);
+		TitanMovable_SetPoint(FramerateLabel, "BOTTOM", "WorldFrame", "BOTTOM", 0, 104 + panelYOffset);
 	else
-		TutorialFrameParent:SetPoint("BOTTOM", "UIParent", "BOTTOM", 0, 52 + panelYOffset);
-		FramerateLabel:SetPoint("BOTTOM", "WorldFrame", "BOTTOM", 0, 64 + panelYOffset);
+		TitanMovable_SetPoint(TutorialFrameParent, "BOTTOM", "UIParent", "BOTTOM", 0, 52 + panelYOffset);
+		TitanMovable_SetPoint(FramerateLabel, "BOTTOM", "WorldFrame", "BOTTOM", 0, 64 + panelYOffset);
 	end
 	
 	-- Update bag anchor
-	if ( MultiBarBottomRight:IsVisible() ) then
+	if ( TitanMovable_IsShown(MultiBarBottomRight) ) then
 		CONTAINER_OFFSET_Y = 97 + panelYOffset;
 	else
 		CONTAINER_OFFSET_Y = 70 + panelYOffset;
 	end
 	-- Setup x anchor
-	if ( MultiBarLeft:IsVisible() ) then
+	if ( TitanMovable_IsShown(MultiBarLeft) ) then
 		CONTAINER_OFFSET_X = 90;
 		anchorX = 90;
-	elseif ( MultiBarRight:IsVisible() ) then
+	elseif ( TitanMovable_IsShown(MultiBarRight) ) then
 		CONTAINER_OFFSET_X = 45;
 		anchorX = 45;
 	else
@@ -359,16 +402,20 @@ function Titan_UIParent_ManageRightSideFrames()
 		anchorX = 0;
 	end
 	-- Setup y anchors
-	QuestTimerFrame:SetPoint("TOPRIGHT", "MinimapCluster", "BOTTOMRIGHT", -anchorX, anchorY);
-	if ( QuestTimerFrame:IsVisible() ) then
-		anchorY = anchorY - QuestTimerFrame:GetHeight();
+	if ( MinimapCluster ) then
+		TitanMovable_SetPoint(QuestTimerFrame, "TOPRIGHT", "MinimapCluster", "BOTTOMRIGHT", -anchorX, anchorY);
+		if ( TitanMovable_IsShown(QuestTimerFrame) ) then
+			anchorY = anchorY - TitanMovable_Height(QuestTimerFrame);
+		end
+		TitanMovable_SetPoint(DurabilityFrame, "TOPRIGHT", "MinimapCluster", "BOTTOMRIGHT", -anchorX-20, anchorY);
+		if ( TitanMovable_IsShown(DurabilityFrame) ) then
+			anchorY = anchorY - TitanMovable_Height(DurabilityFrame);
+		end
+		TitanMovable_SetPoint(QuestWatchFrame, "TOPRIGHT", "MinimapCluster", "BOTTOMRIGHT", -anchorX, anchorY);
 	end
-	DurabilityFrame:SetPoint("TOPRIGHT", "MinimapCluster", "BOTTOMRIGHT", -anchorX-20, anchorY);
-	if ( DurabilityFrame:IsVisible() ) then
-		anchorY = anchorY - DurabilityFrame:GetHeight();
-	end
-	QuestWatchFrame:SetPoint("TOPRIGHT", "MinimapCluster", "BOTTOMRIGHT", -anchorX, anchorY);
 
 	-- Update combat log anchor
-	FCF_UpdateCombatLogPosition();
+	if ( FCF_UpdateCombatLogPosition ) then
+		FCF_UpdateCombatLogPosition();
+	end
 end

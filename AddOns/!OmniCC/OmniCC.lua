@@ -19,17 +19,28 @@ OmniCC = {
 	--hideModel = nil,
 }
 
+-- [Keldurn fix] the GlobalStrings abbreviations can be either "d" or "%d d"
+local function OmniCC_Abbr(value, abbr)
+	if (not abbr) then
+		return value;
+	end
+	if (string.find(abbr, "%d", 1, true)) then
+		return string.format(abbr, value);
+	end
+	return value .. abbr;
+end
+
 --returns the formatted time, scaling to use, color, and the time until the next update is needed
 local function GetFormattedTime(time)
 	--day
 	if (time >= 86400) then
-		return ( math.floor((time / 86400 + 0.5)) .. DAY_ONELETTER_ABBR ), 0.6, OmniCC.long.r, OmniCC.long.g, OmniCC.long.b, math.mod(time, 86400);
+		return OmniCC_Abbr(math.floor(time / 86400 + 0.5), DAY_ONELETTER_ABBR), 0.6, OmniCC.long.r, OmniCC.long.g, OmniCC.long.b, math.mod(time, 86400);
 	--hour
 	elseif (time >= 3600) then
-		return ( math.floor((time / 3600 + 0.5)) .. HOUR_ONELETTER_ABBR ), 0.6, OmniCC.long.r, OmniCC.long.g, OmniCC.long.b, math.mod(time, 3600);
+		return OmniCC_Abbr(math.floor(time / 3600 + 0.5), HOUR_ONELETTER_ABBR), 0.6, OmniCC.long.r, OmniCC.long.g, OmniCC.long.b, math.mod(time, 3600);
 	--minute
 	elseif (time >= 60) then
-		return ( math.floor((time / 60 + 0.5)) .. MINUTE_ONELETTER_ABBR ), 0.8, OmniCC.long.r, OmniCC.long.g, OmniCC.long.b, math.mod(time, 60);
+		return OmniCC_Abbr(math.floor(time / 60 + 0.5), MINUTE_ONELETTER_ABBR), 0.8, OmniCC.long.r, OmniCC.long.g, OmniCC.long.b, math.mod(time, 60);
 	--second, more than 5 seconds left
 	elseif (time > 5) then
 		return math.floor(time + 1), 1.0, OmniCC.medium.r, OmniCC.medium.g, OmniCC.medium.b, 0.2;
@@ -71,13 +82,21 @@ local function CreateCooldownCount(cooldown, start, duration)
 		This makes it a bit more dependent on other mods as far as their icon format goes.
 		Its the only way I can think of to absolutely make sure that the text cooldown is hidden properly.
 	--]]
+	-- [Keldurn fix] some Keldurn buttons have no global name
+	local parentName = cooldown:GetParent():GetName();
+	if (parentName) then
 	cooldown.textFrame.icon = 
 		--standard action button icon, $parentIcon
-		getglobal(cooldown:GetParent():GetName() .. "Icon") or 
+		getglobal(parentName .. "Icon") or 
 		--standard item button icon,  $parentIconTexture
-		getglobal(cooldown:GetParent():GetName() .. "IconTexture") or 
+		getglobal(parentName .. "IconTexture") or 
 		--discord action button, $parent_Icon
-		getglobal(cooldown:GetParent():GetName() .. "_Icon");
+		getglobal(parentName .. "_Icon");
+	end
+	-- if the icon cannot be found, use the button itself to know whether it is visible
+	if (not cooldown.textFrame.icon) then
+		cooldown.textFrame.icon = cooldown:GetParent();
+	end
 	
 	if(cooldown.textFrame.icon) then
 		cooldown.textFrame:SetScript("OnUpdate", OmniCC_OnUpdate);
@@ -183,16 +202,38 @@ end
 	Function Overrides
 --]]
 
+-- [Keldurn fix] Keldurn draws cooldowns its own way (it has no SetSequence).
+-- Instead of replacing the game function, the original is called first and
+-- then OmniCC only adds the number on top.
+local OmniCC_Original_SetTimer = CooldownFrame_SetTimer;
+
+local function OmniCC_IsOn(value)
+	if (value == nil) then
+		return true;
+	elseif (type(value) == "number") then
+		return value > 0;
+	end
+	return value and true or false;
+end
+
 function CooldownFrame_SetTimer(this, start, duration, enable)	
-	if ( start > 0 and duration > 0 and enable > 0) then
+	if (OmniCC_Original_SetTimer) then
+		OmniCC_Original_SetTimer(this, start, duration, enable);
+	end
+	start = tonumber(start) or 0;
+	duration = tonumber(duration) or 0;
+
+	if ( start > 0 and duration > 0 and OmniCC_IsOn(enable) ) then
 		this.start = start;
 		this.duration = duration;
 		this.stopping = 0;
-		this:SetSequence(0);
+		if (this.SetSequence) then
+			this:SetSequence(0);
+		end
 		
 		if(OmniCC.hideModel) then
 			this:Hide();
-		else
+		elseif (not OmniCC_Original_SetTimer) then
 			this:Show();
 		end
 		
@@ -209,7 +250,9 @@ function CooldownFrame_SetTimer(this, start, duration, enable)
 			this.textFrame:Hide();
 		end	
 	else
-		this:Hide();
+		if (not OmniCC_Original_SetTimer) then
+			this:Hide();
+		end
 		if( this.textFrame ) then
 			this.textFrame:Hide();
 		end	

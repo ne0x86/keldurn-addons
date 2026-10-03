@@ -46,7 +46,11 @@ function TitanPanelRightClickMenu_Toggle()
 	ToggleDropDownMenu(1, nil, menu, "TitanPanel" .. TITAN_PANEL_SELECTED .. "Button", TitanUtils_Max(x - 40, 0) / fontscale, 0);
 	
 	-- Adjust menu position if it's off the screen/scaled
-	local listFrame = getglobal("DropDownList"..UIDROPDOWNMENU_MENU_LEVEL);	
+	local listFrame = getglobal("DropDownList"..(UIDROPDOWNMENU_MENU_LEVEL or 1));	
+	-- [Keldurn fix] if the menu could not be created, stop here
+	if ( not listFrame ) then
+		return;
+	end
 	local offscreenX, offscreenY = TitanUtils_GetOffscreen(listFrame);
 	if not TitanPanelGetVar("DisableFont") then
 		listFrame:SetScale(fontscale);
@@ -64,11 +68,13 @@ function TitanPanelRightClickMenu_Toggle()
 end
 
 function TitanPanelRightClickMenu_IsVisible()
-	return DropDownList1:IsVisible();
+	return DropDownList1 and DropDownList1:IsVisible();
 end
 
 function TitanPanelRightClickMenu_Close()
-	DropDownList1:Hide();
+	if ( DropDownList1 ) then
+		DropDownList1:Hide();
+	end
 end
 
 function TitanPanelRightClickMenu_AddTitle(title, level)

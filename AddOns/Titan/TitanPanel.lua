@@ -1208,7 +1208,13 @@ function TitanPanel_LoadServerSettingsMenu()
 				info = {};
 				info.text = server;
 				info.value = server;
-				info.hasArrow = 1;
+				-- [Keldurn fix] Keldurn only has 2 menu levels; without DropDownList3
+				-- the character submenu cannot be opened.
+				if ( DropDownList3 ) then
+					info.hasArrow = 1;
+				else
+					info.disabled = 1;
+				end
 				UIDropDownMenu_AddButton(info, UIDROPDOWNMENU_MENU_LEVEL);
 			end
 		end

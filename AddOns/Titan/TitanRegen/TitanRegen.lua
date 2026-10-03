@@ -38,7 +38,10 @@ function TitanPanelTitanRegenButton_OnLoad()
 
 	this.timer = 0;	
 	this:RegisterEvent("UNIT_HEALTH");
-	this:RegisterEvent("UNIT_MANA");
+	-- [Keldurn fix] Keldurn reports mana changes with UNIT_POWER_UPDATE instead
+	-- of UNIT_MANA. Both are registered (no error if either one does not exist).
+	pcall(this.RegisterEvent, this, "UNIT_MANA");
+	pcall(this.RegisterEvent, this, "UNIT_POWER_UPDATE");
 	this:RegisterEvent("PLAYER_ENTERING_WORLD");
 	this:RegisterEvent("PLAYER_REGEN_DISABLED");
 	this:RegisterEvent("PLAYER_REGEN_ENABLED");
@@ -46,7 +49,10 @@ end
 
 function TitanPanelTitanRegenButton_OnEvent()
 	if ( event == "PLAYER_ENTERING_WORLD") then
-		if (UnitManaMax("player") == 0) then
+		-- [Keldurn fix] on entering the world the max mana may still be 0: check the
+		-- power type (0 = mana) instead of wrongly disabling mana
+		local powerType = UnitPowerType and UnitPowerType("player");
+		if (powerType and powerType ~= 0) then
 			TitanSetVar(TITAN_REGEN_ID, "ShowMPRegen", 0);
 		end
 	end
@@ -83,7 +89,7 @@ function TitanPanelTitanRegenButton_OnEvent()
 	end
 
 	if (TitanGetVar(TITAN_REGEN_ID,"ShowMPRegen") == 1) then
-		if ( event == "UNIT_MANA" and arg1 == "player" ) then
+		if ( (event == "UNIT_MANA" or event == "UNIT_POWER_UPDATE" or event == "KELDURN_MANA_POLL") and arg1 == "player" ) then
 			currMana = UnitMana("player");
 			runUpdate = 1;
 			if ( currMana  > TITAN_RegenCurrMana and TITAN_RegenCurrMana ~= 0 ) then
@@ -263,4 +269,54 @@ function TitanRegenTemp_GetColoredTextRGB(text, r, g, b)
 		local colorCode = "|cff"..redColorCode..greenColorCode..blueColorCode;
 		return colorCode..text..FONT_COLOR_CODE_CLOSE;
 	end
+end
+
+-- [Keldurn fix] in case the client does not notify every mana change, check it
+-- 4 times per second and, if it changed, handle it like the game event.
+local TitanRegen_KeldurnPoll = CreateFrame("Frame");
+local TitanRegen_KeldurnPollTime = 0;
+local TitanRegen_KeldurnLastMana;
+TitanRegen_KeldurnPoll:SetScript("OnUpdate", function(p1, p2)
+	local elapsed = arg1;
+	if (type(p2) == "number") then
+		elapsed = p2;
+	elseif (type(p1) == "number") then
+		elapsed = p1;
+	end
+	if (type(elapsed) ~= "number") then
+		elapsed = 0.05;
+	end
+	TitanRegen_KeldurnPollTime = TitanRegen_KeldurnPollTime + elapsed;
+	if (TitanRegen_KeldurnPollTime < 0.25) then
+		return;
+	end
+	TitanRegen_KeldurnPollTime = 0;
+	local mana = UnitMana("player");
+	if (mana ~= TitanRegen_KeldurnLastMana) then
+		TitanRegen_KeldurnLastMana = mana;
+		if (mana ~= TITAN_RegenCurrMana and TitanPanelTitanRegenButton) then
+			local oldThis, oldEvent, oldArg1 = this, event, arg1;
+			this, event, arg1 = TitanPanelTitanRegenButton, "KELDURN_MANA_POLL", "player";
+			pcall(TitanPanelTitanRegenButton_OnEvent);
+			this, event, arg1 = oldThis, oldEvent, oldArg1;
+		end
+	end
+end);
+
+-- [Keldurn fix] if any function of this plugin fails in Keldurn, report it once
+-- in chat instead of showing the error window over and over.
+if (TitanKeldurn_Protect) then
+	TitanKeldurn_Protect({
+	"TitanPanelTitanRegenButton_OnLoad",
+	"TitanPanelTitanRegenButton_OnEvent",
+	"TitanPanelTitanRegenButton_GetButtonText",
+	"TitanPanelTitanRegenButton_GetTooltipText",
+	"TitanPanelRightClickMenu_PrepareTitanRegenMenu",
+	"TitanRegen_UpdateSettings",
+	"TitanRegen_ShowHPRegen",
+	"TitanRegen_ShowMPRegen",
+	"TitanRegen_ShowPercentage",
+	"TitanRegen_ShowColoredText",
+	"TitanRegenTemp_GetColoredTextRGB"
+	});
 end

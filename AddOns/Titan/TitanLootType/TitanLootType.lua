@@ -70,3 +70,14 @@ function TitanPanelRightClickMenu_PrepareLootTypeMenu()
 	TitanPanelRightClickMenu_AddCommand(TITAN_PANEL_MENU_HIDE, TITAN_LOOTTYPE_ID, TITAN_PANEL_MENU_FUNC_HIDE);
 end
 
+-- [Keldurn fix] if any function of this plugin fails in Keldurn, report it once
+-- in chat instead of showing the error window over and over.
+if (TitanKeldurn_Protect) then
+	TitanKeldurn_Protect({
+	"TitanPanelLootTypeButton_OnLoad",
+	"TitanPanelLootTypeButton_OnEvent",
+	"TitanPanelLootTypeButton_GetButtonText",
+	"TitanPanelLootTypeButton_GetTooltipText",
+	"TitanPanelRightClickMenu_PrepareLootTypeMenu"
+	});
+end

@@ -38,7 +38,7 @@ function BonusScanner_ScanAll()
 	for i, slotName in slotNames do
 		id, _ = GetInventorySlotInfo(slotName.. "Slot");
 		TPIBonTooltip:Hide()
-		TPIBonTooltip:SetOwner(this, "ANCHOR_LEFT");
+		TPIBonTooltip:SetOwner(WorldFrame, "ANCHOR_NONE"); -- [Keldurn fix] hidden tooltip used to read the item
 		hasItem = TPIBonTooltip:SetInventoryItem("player", id);
 	
 		if ( not hasItem ) then
@@ -218,4 +218,18 @@ function BonusScanner_ScanOther(line)
 			end
 		end
 	end
+end
+
+-- [Keldurn fix] if any function of this plugin fails in Keldurn, report it once
+-- in chat instead of showing the error window over and over.
+if (TitanKeldurn_Protect) then
+	TitanKeldurn_Protect({
+	"BonusScanner_ScanAll",
+	"BonusScanner_AddValue",
+	"BonusScanner_ScanLine",
+	"BonusScanner_ScanPassive",
+	"BonusScanner_ScanGeneric",
+	"BonusScanner_ScanToken",
+	"BonusScanner_ScanOther"
+	});
 end

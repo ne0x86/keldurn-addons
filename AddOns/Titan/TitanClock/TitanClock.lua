@@ -216,3 +216,26 @@ function TitanPanelClockButton_ToggleRightSideDisplay()
 	TitanPanel_AddButton(TITAN_CLOCK_ID);
 --	TitanPanelButton_UpdateButton(TITAN_BAG_ID);
 end
+
+-- [Keldurn fix] if any function of this plugin fails in Keldurn, report it once
+-- in chat instead of showing the error window over and over.
+if (TitanKeldurn_Protect) then
+	TitanKeldurn_Protect({
+	"TitanPanelClockButton_OnLoad",
+	"TitanPanelClockButton_GetButtonText",
+	"TitanPanelClockButton_GetTooltipText",
+	"TitanPanelClockControlSlider_OnEnter",
+	"TitanPanelClockControlSlider_OnLeave",
+	"TitanPanelClockControlSlider_OnShow",
+	"TitanPanelClockControlSlider_OnValueChanged",
+	"TitanPanelClockControlCheckButton_OnShow",
+	"TitanPanelClockControlCheckButton_OnClick",
+	"TitanPanelClockControlCheckButton_OnEnter",
+	"TitanPanelClockControlCheckButton_OnLeave",
+	"TitanPanelClock_GetOffsetText",
+	"TitanPanelClockControlFrame_OnLoad",
+	"TitanPanelClockControlFrame_OnUpdate",
+	"TitanPanelRightClickMenu_PrepareClockMenu",
+	"TitanPanelClockButton_ToggleRightSideDisplay"
+	});
+end

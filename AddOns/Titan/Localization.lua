@@ -365,7 +365,8 @@ function TitanLocalizeEN()
 	CUSTOMIZATION_FEATURE_COMING_SOON = "Customization feature coming soon...";
 end
 
-function Localize()
+-- [Keldurn fix] renamed so they do not override the game's Localize() functions
+function TitanLocalize()
 	TitanLocalizeEN();
 	
 	local locale = GetLocale();
@@ -376,6 +377,6 @@ function Localize()
 	end
 end
 
-function LocalizeFrames()
+function TitanLocalizeFrames()
 	-- Put all locale specific UI adjustments here
 end

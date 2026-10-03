@@ -208,3 +208,28 @@ function TitanBag_IsProfBag(name)
 	end
 	return false;
 end
+
+-- [Keldurn fix] the menu calls ...ProfBagSlots but the function was named ...ProfdBagSlots
+TitanPanelBagButton_ToggleIgnoreProfBagSlots = TitanPanelBagButton_ToggleIgnoreProfdBagSlots;
+
+-- [Keldurn fix] if any function of this plugin fails in Keldurn, report it once
+-- in chat instead of showing the error window over and over.
+if (TitanKeldurn_Protect) then
+	TitanKeldurn_Protect({
+	"TitanPanelBagButton_OnLoad",
+	"TitanPanelBagButton_OnEvent",
+	"TitanPanelBagButton_OnClick",
+	"TitanPanelBagButton_GetButtonText",
+	"TitanPanelBagButton_GetTooltipText",
+	"TitanPanelRightClickMenu_PrepareBagMenu",
+	"TitanPanelBagButton_ShowUsedSlots",
+	"TitanPanelBagButton_ShowAvailableSlots",
+	"TitanPanelBagButton_ToggleIgnoreAmmoPouchSlots",
+	"TitanPanelBagButton_ToggleIgnoreShardBagSlots",
+	"TitanPanelBagButton_ToggleIgnoreProfdBagSlots",
+	"TitanBag_IsAmmoPouch",
+	"TitanBag_IsShardBag",
+	"TitanBag_IsProfBag",
+	"TitanPanelBagButton_ToggleIgnoreProfBagSlots"
+	});
+end

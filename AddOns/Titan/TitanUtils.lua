@@ -152,7 +152,7 @@ function TitanUtils_IsAnyControlFrameVisible()
 end
 
 function TitanUtils_CloseRightClickMenu()
-	if (DropDownList1:IsVisible()) then
+	if (DropDownList1 and DropDownList1:IsVisible()) then
 		DropDownList1:Hide();
 	end
 end
@@ -666,7 +666,10 @@ end
 
 -- There's obvious bug in Blizzard code to handle the drop down menu offscreen cases.
 -- I overwrote this function in order to do it right
-function ToggleDropDownMenu(level, value, dropDownFrame, anchorName, xOffset, yOffset)
+-- [Keldurn fix] Keldurn has its own dropdown menu system. Titan no longer replaces
+-- the game's function (it broke the submenus and could affect other menus).
+-- It is kept under another name for reference only; it is not used.
+function TitanUtils_Unused_ToggleDropDownMenu(level, value, dropDownFrame, anchorName, xOffset, yOffset)
 	if ( not level ) then
 		level = 1;
 	end

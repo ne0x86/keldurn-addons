@@ -16,17 +16,39 @@ function TitanPanelMoneyButton_OnLoad()
 		updateType = TITAN_PANEL_UPDATE_TOOLTIP,
 	};
 
-	SmallMoneyFrame_OnLoad();
+	-- [Keldurn fix] only if the client has these FrameXML functions
+	if (SmallMoneyFrame_OnLoad) then
+		SmallMoneyFrame_OnLoad();
+	end
 	this:RegisterEvent("PLAYER_ENTERING_WORLD");
 
-	WoW_OpenCoinPickupFrame = OpenCoinPickupFrame;	
-	OpenCoinPickupFrame = Titan_OpenCoinPickupFrame;
+	-- [Keldurn fix] the game's OpenCoinPickupFrame is no longer replaced (it affected
+	-- the bag money). Titan uses its own version only on its own button.
+end
+
+function TitanPanelMoneyButton_OnShow()
+	if (MoneyFrame_UpdateMoney) then
+		MoneyFrame_UpdateMoney();
+	end
+end
+
+function TitanPanelMoneyButton_OnHide()
+	if ( this.hasPickup == 1 ) then
+		if (CoinPickupFrame) then
+			CoinPickupFrame:Hide();
+		end
+		this.hasPickup = 0;
+	end
 end
 
 function TitanPanelMoneyButton_OnEvent() 
-	MoneyFrame_OnEvent()
+	if (MoneyFrame_OnEvent) then
+		MoneyFrame_OnEvent();
+	end
 	if (event == "PLAYER_ENTERING_WORLD") then
-		MoneyFrame_UpdateMoney();
+		if (MoneyFrame_UpdateMoney) then
+			MoneyFrame_UpdateMoney();
+		end
 		if (not startMoney) then
 			startMoney = GetMoney();
 			startSessionTime = 0;
@@ -37,7 +59,7 @@ end
 function TitanPanelMoneyCopperButton_OnClick(button)
 	if (button == "LeftButton") then
 		local parent = this:GetParent();
-		OpenCoinPickupFrame(1, MoneyTypeInfo[parent.moneyType].UpdateFunc(), parent);
+		Titan_OpenCoinPickupFrame(1, MoneyTypeInfo[parent.moneyType].UpdateFunc(), parent);
 		parent.hasPickup = 1;
 	end
 end
@@ -45,7 +67,7 @@ end
 function TitanPanelMoneySilverButton_OnClick(button)
 	if (button == "LeftButton") then
 		local parent = this:GetParent();
-		OpenCoinPickupFrame(COPPER_PER_SILVER, MoneyTypeInfo[parent.moneyType].UpdateFunc(), parent);
+		Titan_OpenCoinPickupFrame(COPPER_PER_SILVER, MoneyTypeInfo[parent.moneyType].UpdateFunc(), parent);
 		parent.hasPickup = 1;
 	end
 end
@@ -53,7 +75,7 @@ end
 function TitanPanelMoneyGoldButton_OnClick(button)
 	if (button == "LeftButton") then
 		local parent = this:GetParent();
-		OpenCoinPickupFrame(COPPER_PER_GOLD, MoneyTypeInfo[parent.moneyType].UpdateFunc(), parent);
+		Titan_OpenCoinPickupFrame(COPPER_PER_GOLD, MoneyTypeInfo[parent.moneyType].UpdateFunc(), parent);
 		parent.hasPickup = 1;
 	end
 end
@@ -132,6 +154,10 @@ function TitanPanelMoneyButton_BreakMoney(money)
 end
 
 function Titan_OpenCoinPickupFrame(multiplier, maxMoney, parent)
+	-- [Keldurn fix] if the client has no coin pickup window, do nothing
+	if ( not CoinPickupFrame or not CoinPickupText ) then
+		return;
+	end
 	if ( CoinPickupFrame.owner ) then
 		CoinPickupFrame.owner.hasPickup = 0;
 	end
@@ -204,4 +230,24 @@ function Titan_OpenCoinPickupFrame(multiplier, maxMoney, parent)
 	end
 	CoinPickupFrame:Show();
 	PlaySound("igBackPackCoinSelect");
+end
+
+-- [Keldurn fix] if any function of this plugin fails in Keldurn, report it once
+-- in chat instead of showing the error window over and over.
+if (TitanKeldurn_Protect) then
+	TitanKeldurn_Protect({
+	"TitanPanelMoneyButton_OnLoad",
+	"TitanPanelMoneyButton_OnShow",
+	"TitanPanelMoneyButton_OnHide",
+	"TitanPanelMoneyButton_OnEvent",
+	"TitanPanelMoneyCopperButton_OnClick",
+	"TitanPanelMoneySilverButton_OnClick",
+	"TitanPanelMoneyGoldButton_OnClick",
+	"TitanPanelMoneyButton_GetTooltipText",
+	"TitanPanelRightClickMenu_PrepareMoneyMenu",
+	"TitanPanelMoneyButton_ResetSession",
+	"TitanPanelMoneyButton_GetMoneyPerHour",
+	"TitanPanelMoneyButton_BreakMoney",
+	"Titan_OpenCoinPickupFrame"
+	});
 end

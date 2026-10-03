@@ -73,18 +73,20 @@
 		<Size>
 			<AbsDimension x="0" y="16" />
 		</Size>
-		<NormalText name="$parentText" inherits="GameFontNormalSmall" justifyH="LEFT">
-			<Anchors>
-				<Anchor point="LEFT">
-					<Offset>
-						<AbsDimension x="0" y="1" />
-					</Offset>
-				</Anchor>
-			</Anchors>
-		</NormalText>
-		<PushedTextOffset>
-			<AbsDimension x="0" y="0"/>
-		</PushedTextOffset>
+		<!-- [Keldurn fix] Keldurn does not create text defined with <NormalText>; a regular FontString is used instead -->
+		<Layers>
+			<Layer level="ARTWORK">
+				<FontString name="$parentText" inherits="GameFontNormalSmall" justifyH="LEFT">
+					<Anchors>
+						<Anchor point="LEFT">
+							<Offset>
+								<AbsDimension x="0" y="1" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
 	</Button>
 	<Button name="TitanPanelIconTemplate" inherits="TitanPanelButtonTemplate" virtual="true">
 		<Size>
@@ -117,12 +119,18 @@
 						<Anchor point="LEFT" />
 					</Anchors>
 				</Texture>
+				<!-- [Keldurn fix] Keldurn does not create text defined with <NormalText>; a regular FontString is used instead -->
+				<FontString name="$parentText" inherits="GameFontNormalSmall" justifyH="LEFT">
+					<Anchors>
+						<Anchor point="LEFT">
+							<Offset>
+								<AbsDimension x="0" y="1" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
 			</Layer>
 		</Layers>
-		<NormalText name="$parentText" inherits="GameFontNormalSmall" justifyH="LEFT" />
-		<PushedTextOffset>
-			<AbsDimension x="0" y="0"/>
-		</PushedTextOffset>
 	</Button>
 	<Slider name="TitanOptionsSliderTemplate" orientation="VERTICAL" virtual="true" enableMouse="true">
 		<Size>

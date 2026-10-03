@@ -192,3 +192,21 @@ function TitanMapFrame_OnUpdate()
 		TitanMapPlayerCoords:SetText(format(TITAN_COORDS_MAP_PLAYER_COORDS_TEXT, TitanUtils_GetHighlightText(playerCoordsText)));
 	end
 end
+
+-- [Keldurn fix] if any function of this plugin fails in Keldurn, report it once
+-- in chat instead of showing the error window over and over.
+if (TitanKeldurn_Protect) then
+	TitanKeldurn_Protect({
+	"TitanPanelCoordsButton_OnLoad",
+	"TitanPanelCoordsButton_GetButtonText",
+	"TitanPanelCoordsButton_GetTooltipText",
+	"TitanPanelCoordsButton_OnEvent",
+	"TitanPanelCoordsButton_OnClick",
+	"TitanPanelCoordsButton_UpdateZoneInfo",
+	"TitanPanelRightClickMenu_PrepareCoordsMenu",
+	"TitanPanelCoordsButton_ToggleDisplay",
+	"TitanPanelCoordsButton_ToggleCoordsOnMap",
+	"TitanPanelCoordsButton_ToggleColor",
+	"TitanMapFrame_OnUpdate"
+	});
+end

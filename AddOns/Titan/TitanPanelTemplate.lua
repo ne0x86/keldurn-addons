@@ -9,6 +9,20 @@ TITAN_PANEL_BUTTON_TYPE_ICON = 2;
 TITAN_PANEL_BUTTON_TYPE_COMBO = 3;
 TITAN_PANEL_BUTTON_TYPE_CUSTOM = 4;
 
+-- [Keldurn fix] real text width (in Keldurn, GetWidth() of a text with no fixed size can return 0)
+function TitanPanelButton_GetTextWidth(text)
+	local width = 0;
+	if (text) then
+		if (text.GetStringWidth) then
+			width = text:GetStringWidth() or 0;
+		end
+		if ((not width or width == 0) and text.GetWidth) then
+			width = text:GetWidth() or 0;
+		end
+	end
+	return width or 0;
+end
+
 function TitanOptionSlider_TooltipText(text, value) 
 	return text .. GREEN_FONT_COLOR_CODE .. value .. FONT_COLOR_CODE_CLOSE;
 end
@@ -282,9 +296,9 @@ function TitanPanelButton_SetTextButtonWidth(id, setButtonWidth)
 		local text = getglobal(button:GetName().."Text");
 		if ( setButtonWidth or
 				button:GetWidth() == 0 or 
-				button:GetWidth() - text:GetWidth() > TITAN_PANEL_BUTTON_WIDTH_CHANGE_TOLERANCE or 
-				button:GetWidth() - text:GetWidth() < -TITAN_PANEL_BUTTON_WIDTH_CHANGE_TOLERANCE ) then
-			button:SetWidth(text:GetWidth());
+				button:GetWidth() - TitanPanelButton_GetTextWidth(text) > TITAN_PANEL_BUTTON_WIDTH_CHANGE_TOLERANCE or 
+				button:GetWidth() - TitanPanelButton_GetTextWidth(text) < -TITAN_PANEL_BUTTON_WIDTH_CHANGE_TOLERANCE ) then
+			button:SetWidth(TitanPanelButton_GetTextWidth(text));
 			TitanPanelButton_Justify();
 		end
 	end
@@ -322,13 +336,13 @@ function TitanPanelButton_SetComboButtonWidth(id, setButtonWidth)
 			text:ClearAllPoints();
 			text:SetPoint("LEFT", icon:GetName(), "RIGHT", 2, 1);
 			
-			newButtonWidth = text:GetWidth() + iconButtonWidth + 2;
+			newButtonWidth = TitanPanelButton_GetTextWidth(text) + iconButtonWidth + 2;
 		else
 			icon:Hide();
 			text:ClearAllPoints();
 			text:SetPoint("LEFT", button:GetName(), "Left", 0, 1);
 			
-			newButtonWidth = text:GetWidth();
+			newButtonWidth = TitanPanelButton_GetTextWidth(text);
 		end
 		
 		if ( setButtonWidth or

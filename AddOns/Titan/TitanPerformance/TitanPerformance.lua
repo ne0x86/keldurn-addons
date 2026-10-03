@@ -154,7 +154,12 @@ function TitanPanelPerformanceButton_SetTooltip()
 	if ( showMemory ) then
 		local memoryText = format(TITAN_MEMORY_FORMAT, this.memory/1024);
 		local initialMemoryText = format(TITAN_MEMORY_FORMAT, this.initialMemory/1024);
-		local gcThresholdText = format(TITAN_MEMORY_FORMAT, this.gcThreshold/1024);
+		-- [Keldurn fix] Keldurn's Lua (5.1) does not provide the garbage collector threshold
+		local hasThreshold = (type(this.gcThreshold) == "number");
+		local gcThresholdText;
+		if ( hasThreshold ) then
+			gcThresholdText = format(TITAN_MEMORY_FORMAT, this.gcThreshold/1024);
+		end
 		local sessionTime = TitanUtils_GetSessionTime() - this.startSessionTime;		
 		local rateRichText, timeToGCRichText, rate, timeToGC, color;	
 		if ( sessionTime == 0 ) then
@@ -164,7 +169,7 @@ function TitanPanelPerformanceButton_SetTooltip()
 			color = TitanUtils_GetThresholdColor(TITAN_MEMORY_RATE_THRESHOLD_TABLE, rate);
 			rateRichText = TitanUtils_GetColoredText(format(TITAN_MEMORY_RATE_FORMAT, rate), color);
 		end	
-		if ( this.memory == this.initialMemory ) then
+		if ( not hasThreshold or this.memory == this.initialMemory ) then
 			timeToGCRichText = TitanUtils_GetHighlightText("N/A");
 		else
 			timeToGC = (this.gcThreshold - this.memory) / (this.memory - this.initialMemory) * sessionTime;
@@ -177,10 +182,12 @@ function TitanPanelPerformanceButton_SetTooltip()
 		GameTooltip:AddDoubleLine(TITAN_MEMORY_TOOLTIP_CURRENT_MEMORY, TitanUtils_GetHighlightText(memoryText));
 		GameTooltip:AddDoubleLine(TITAN_MEMORY_TOOLTIP_INITIAL_MEMORY, TitanUtils_GetHighlightText(initialMemoryText));
 		GameTooltip:AddDoubleLine(TITAN_MEMORY_TOOLTIP_INCREASING_RATE, rateRichText);
-		GameTooltip:AddLine("\n");
-		GameTooltip:AddLine(TitanUtils_GetHighlightText(TITAN_MEMORY_TOOLTIP_GC_INFO));
-		GameTooltip:AddDoubleLine(TITAN_MEMORY_TOOLTIP_GC_THRESHOLD, TitanUtils_GetHighlightText(gcThresholdText));
-		GameTooltip:AddDoubleLine(TITAN_MEMORY_TOOLTIP_TIME_TO_GC, timeToGCRichText);
+		if ( hasThreshold ) then
+			GameTooltip:AddLine("\n");
+			GameTooltip:AddLine(TitanUtils_GetHighlightText(TITAN_MEMORY_TOOLTIP_GC_INFO));
+			GameTooltip:AddDoubleLine(TITAN_MEMORY_TOOLTIP_GC_THRESHOLD, TitanUtils_GetHighlightText(gcThresholdText));
+			GameTooltip:AddDoubleLine(TITAN_MEMORY_TOOLTIP_TIME_TO_GC, timeToGCRichText);
+		end
 	end
 end
 
@@ -249,4 +256,17 @@ function TitanPanelPerformanceButton_ResetMemory()
 	button.memory, button.gcThreshold = gcinfo();	
 	button.initialMemory = button.memory;
 	button.startSessionTime = TitanUtils_GetSessionTime();
+end
+
+-- [Keldurn fix] if any function of this plugin fails in Keldurn, report it once
+-- in chat instead of showing the error window over and over.
+if (TitanKeldurn_Protect) then
+	TitanKeldurn_Protect({
+	"TitanPanelPerformanceButton_OnLoad",
+	"TitanPanelPerformanceButton_GetButtonText",
+	"TitanPanelPerformanceButton_SetTooltip",
+	"TitanPanelRightClickMenu_PreparePerformanceMenu",
+	"TitanPanelPerformanceButton_UpdateData",
+	"TitanPanelPerformanceButton_ResetMemory"
+	});
 end

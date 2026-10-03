@@ -171,3 +171,20 @@ function TitanPanelXPButton_ResetSession()
 	TitanPanelXPButton.sessionXP = 0;
 	TitanPanelXPButton.startSessionTime = TitanUtils_GetSessionTime();
 end
+
+-- [Keldurn fix] if any function of this plugin fails in Keldurn, report it once
+-- in chat instead of showing the error window over and over.
+if (TitanKeldurn_Protect) then
+	TitanKeldurn_Protect({
+	"TitanPanelXPButton_OnLoad",
+	"TitanPanelXPButton_OnShow",
+	"TitanPanelXPButton_OnEvent",
+	"TitanPanelXPButton_GetButtonText",
+	"TitanPanelXPButton_GetTooltipText",
+	"TitanPanelXPButton_SetIcon",
+	"TitanPanelRightClickMenu_PrepareXPMenu",
+	"TitanPanelXPButton_ShowXPPerHourSession",
+	"TitanPanelXPButton_ShowXPPerHourLevel",
+	"TitanPanelXPButton_ResetSession"
+	});
+end

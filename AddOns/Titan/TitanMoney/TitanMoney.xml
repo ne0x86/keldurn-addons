@@ -133,13 +133,10 @@
 						TitanPanelMoneyButton_OnEvent();
 					</OnEvent>
 					<OnShow>
-						MoneyFrame_UpdateMoney();
+						TitanPanelMoneyButton_OnShow();
 					</OnShow>
 					<OnHide>
-						if ( this.hasPickup == 1 ) then
-							CoinPickupFrame:Hide();
-							this.hasPickup = 0;
-						end
+						TitanPanelMoneyButton_OnHide();
 					</OnHide>
 				</Scripts>
 			</Button>
