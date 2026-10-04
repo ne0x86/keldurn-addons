@@ -2,7 +2,7 @@
 
 Addons for the Windows client of **[Keldurn](https://play.keldurn.com/)** (WoW 1.12.1), ready to copy and play.
 
-The Keldurn client is a reimplementation of the 1.12 interface, and some classic addons fail on it because they expect functions or frames from the original client. This repository has three addons written from scratch for Keldurn and two classic addons patched so they run without errors.
+The Keldurn client is a reimplementation of the 1.12 interface, and some classic addons fail on it because they expect functions or frames from the original client. This repository has three addons written from scratch for Keldurn, two classic addons patched so they run without errors, and the Atlas suite included unchanged.
 
 ## What's included
 
@@ -13,6 +13,9 @@ The Keldurn client is a reimplementation of the 1.12 interface, and some classic
 | **KeldurnSellPrice** | Vendor sell price in item tooltips (bags, bank, loot, chat links, quest rewards, trade, auction house). Prices are learned when you open a vendor window. | New |
 | **Titan** (Titan Panel 2.19.1) | Information bars at the top/bottom of the screen. Enabled by default: Performance (FPS/latency/memory), XP, Coordinates, Clock, Bags, Money, Repair (durability) and ItemBonuses. Also available: Ammo, Loot Type and Regeneration. | Patched |
 | **!OmniCC** | Remaining-time numbers on icons that are on cooldown. | Patched |
+| **Atlas** | Instance map browser. | Unchanged |
+| **AtlasLoot Enhanced** | Boss loot tables. | Unchanged |
+| **AtlasQuest** | Quests of each instance. | Unchanged |
 
 ## Installation
 
@@ -21,7 +24,7 @@ The Keldurn client is a reimplementation of the 1.12 interface, and some classic
    ```
    %LOCALAPPDATA%\Keldurn\settings\AddOns
    ```
-3. Extract the zip there: the addon folders (KeldurnFrames, KeldurnTimers, KeldurnSellPrice, Titan, !OmniCC) go directly inside that folder. If you do not want all of them, every addon is also available as its own zip on the same page.
+3. Extract the zip there: the addon folders (KeldurnFrames, KeldurnTimers, KeldurnSellPrice, Titan, !OmniCC, Atlas, AtlasLoot, AtlasQuest) go directly inside that folder. If you do not want all of them, every addon is also available as its own zip on the same page (the Atlas one is the big one, about 15 MB of map images).
    - If you already had one of these addons installed, **delete its old folder first**. Some Titan versions ship extra subfolders (TitanBG, TitanItemBonuses, TitanHonorPlus…) that are loaded as separate addons and cause errors.
 4. Start the game and, on the character selection screen, open **AddOns** and check that they are enabled.
 
@@ -58,6 +61,8 @@ The Keldurn client is a reimplementation of the 1.12 interface, and some classic
 | `/ksp diag` | Diagnostic information if prices do not show up |
 | `/ksp reset` | Forget all learned prices |
 
+**Atlas, AtlasLoot and AtlasQuest**: `/atlas`, `/atlasloot` (or `/al`) and `/aq` (or `/atlasquest`).
+
 **Titan Panel**: right-click the bar to add or remove modules.
 
 ## What was changed in the classic addons
@@ -73,6 +78,7 @@ The changes are compatibility fixes; behavior is the same as the original. If a 
   - Regeneration: mana no longer shows 0 all the time (Keldurn uses `UNIT_POWER_UPDATE` instead of `UNIT_MANA`).
   - Repair and ItemBonuses adapted (`TitanKeldurnItemBonuses.lua`, protected popup windows).
 - **!OmniCC**: no longer replaces the game's cooldown function, it hooks into it; protected against `SetSequence`, which Keldurn does not have.
+- **Atlas, AtlasLoot Enhanced and AtlasQuest**: no changes, they are included exactly as they come.
 
 The exact changes can be reviewed as a plain diff: the first commit of this repository contains the original, unmodified third-party files, and the second one holds the Keldurn patches.
 
@@ -84,7 +90,7 @@ KeldurnSellPrice ships no price database: it starts empty and learns each item's
 
 ## Not included
 
-**MetaMap** and **MobInfo2** were tested, but they depend too much on parts of the map and interface that Keldurn implements differently, so they are not included.
+**MetaMap** and **MobInfo2** were tested, but they depend too much on parts of the map and interface that Keldurn implements differently, so they are not included. `FuBar_AtlasFu`, which comes in the original Atlas package, is not included either: it needs FuBar.
 
 ## Issues
 
@@ -95,9 +101,10 @@ Open an [issue](../../issues) with a screenshot of the error message (or of the 
 - **KeldurnFrames**, **KeldurnTimers** and **KeldurnSellPrice**: ne0x86.
 - **Titan Panel**: TitanMod / Adsertor. TitanRepair: lua@lumpn.de / Adsertor, with improvements by Archarodim. ItemBonuses/BonusScanner and the rest of the modules: their original authors.
 - **OmniCC**: Tuller.
+- **Atlas**: Dan Gilbert, Daviesh, Thandrenn, Asurn, Loather, Rabidmax, Dazerdude, laytya and Lichery. **AtlasLoot Enhanced**: Daviesh, laytya and Lichery. **AtlasQuest**: Asurn and Thandrenn. Backport for 1.12: [laytya/Atlas](https://github.com/laytya/Atlas).
 
 The classic addons belong to their authors; they are only distributed here with the compatibility patches for Keldurn. If you are the author of one of them and prefer it not to be here, open an issue and it will be removed.
 
 ## License
 
-The original code (KeldurnFrames, KeldurnTimers, KeldurnSellPrice and the compatibility changes) is published under the MIT license: see [LICENSE](LICENSE). Third-party addons keep the terms of their original authors; the origin, version and license status of each one are in [THIRD_PARTY.md](THIRD_PARTY.md).
+The original code (KeldurnFrames, KeldurnTimers, KeldurnSellPrice and the compatibility changes) is published under the MIT license: see [LICENSE](LICENSE). Third-party addons keep the terms of their original authors; the origin, version and license status of each one are in [THIRD_PARTY.md](THIRD_PARTY.md). Atlas and AtlasQuest are distributed under the GNU GPL version 2 or later; the text is in the `COPYING` file of each folder.
