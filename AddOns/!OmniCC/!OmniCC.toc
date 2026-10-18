@@ -1,4 +1,4 @@
-## Interface: 11100
+## Interface: 11200
 ## Title: Omni Cooldown Count
 ## Notes: Cooldown Count for Everything
 ## Author: Tuller
